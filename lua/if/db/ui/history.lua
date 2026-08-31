@@ -56,7 +56,7 @@ local function query_hints(query)
   local parts = {}
 
   if upper:match "%sWHERE%s" then
-    parts[#parts + 1] = { text = "?", hl = "IfDbHistoryHintWhere", atomic = true }
+    parts[#parts + 1] = { text = "󰈲", hl = "IfDbHistoryHintWhere", atomic = true }
     local column = flat:match "%s[Ww][Hh][Ee][Rr][Ee]%s+[%w_]+%.([%w_]+)"
       or flat:match "%s[Ww][Hh][Ee][Rr][Ee]%s+([%w_]+)"
     if column then
@@ -83,7 +83,7 @@ local function query_hints(query)
 
   local limit = upper:match "%sLIMIT%s+(%d+)"
   if limit then
-    parts[#parts + 1] = { text = "L" .. limit, hl = "IfDbHistoryHintLimit", atomic = true }
+    parts[#parts + 1] = { text = "󰆐 " .. limit, hl = "IfDbHistoryHintLimit", atomic = true }
   end
 
   return parts

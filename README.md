@@ -75,20 +75,20 @@ The history pane is written in a shorthand rather than echoing the SQL,
 which is already on screen in the editor beside it:
 
 ```
-10:35  SEL stories ? karma 󰕤 users 󰒼   53ms
-10:35  SEL user_detail ? id L20        31ms
-10:34  DEL comments ? story_id         50ms
+10:35  SEL stories 󰈲 karma 󰕤 users 󰒼   53ms
+10:35  SEL user_detail 󰈲 id 󰆐 20        31ms
+10:34  DEL comments 󰈲 story_id         50ms
 10:33  SEL users 󰒽                     60ms
 10:33  SEL stories 󰒠                   99ms
 ```
 
 | Marker | Clause |
 |---|---|
-| `? column` | `WHERE`, with the column it filters on |
+| `󰈲 column` | `WHERE`, with the column it filters on |
 | `󰕤 name` | `JOIN name` |
 | `󰒽` `󰒼` | `ORDER BY`, ascending or descending |
 | `󰒠` | `GROUP BY` |
-| `Ln` | `LIMIT n` |
+| `󰆐 n` | `LIMIT n` |
 
 A clause shows its value when the value tells you which query this was:
 the column a WHERE filters on, the table a JOIN reaches for, the row

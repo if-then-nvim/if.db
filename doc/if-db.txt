@@ -146,8 +146,8 @@ history ~
     - `persist`: Save history to disk (default: true)
     - `filter_by_connection`: Filter by current connection (default: true)
 
-    Queries are written in a shorthand: `? column` for WHERE, `󰕤 name`
-    for JOIN, `󰒽` or `󰒼` for ORDER BY, `󰒠` for GROUP BY, `Ln` for
+    Queries are written in a shorthand: `󰈲 column` for WHERE, `󰕤 name`
+    for JOIN, `󰒽` or `󰒼` for ORDER BY, `󰒠` for GROUP BY, `󰆐 n` for
     LIMIT. A clause shows its value only when that value helps identify
     the query.
 
