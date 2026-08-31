@@ -75,23 +75,30 @@ The history pane is written in a shorthand rather than echoing the SQL,
 which is already on screen in the editor beside it:
 
 ```
-10:35  SEL stories 󰕤 users 󰒼 󰒠     53ms
-10:35  SEL users                   31ms
-10:34  SEL users 󰒽                 50ms
-10:33  UPD users ?                 60ms
-10:33  SEL stories 󰉻20             99ms
+10:35  SEL stories ? karma 󰕤 users 󰒼   53ms
+10:35  SEL user_detail ? id L20        31ms
+10:34  DEL comments ? story_id         50ms
+10:33  SEL users 󰒽                     60ms
+10:33  SEL stories 󰒠                   99ms
 ```
 
-| Symbol | Codepoint | Clause |
-|---|---|---|
-| `?` | — | `WHERE` |
-| `󰕤 name` | `U+F0564` | `JOIN name` |
-| `󰒽` `󰒼` | `U+F04BD` `U+F04BC` | `ORDER BY`, ascending or descending |
-| `󰒠` | `U+F04A0` | `GROUP BY` |
-| `󰉻n` | `U+F027B` | `LIMIT n` |
+| Marker | Clause |
+|---|---|
+| `? column` | `WHERE`, with the column it filters on |
+| `󰕤 name` | `JOIN name` |
+| `󰒽` `󰒼` | `ORDER BY`, ascending or descending |
+| `󰒠` | `GROUP BY` |
+| `Ln` | `LIMIT n` |
 
-Every symbol comes from the Nerd Font the plugin already needs, so none
-of them depend on what your system happens to fall back to.
+A clause shows its value when the value tells you which query this was:
+the column a WHERE filters on, the table a JOIN reaches for, the row
+count a LIMIT stops at. Sort and group columns are left off, because
+knowing a query was sorted rarely helps you find it and the names are
+long.
+
+Markers are never half-drawn. When the pane is too narrow, a table or
+column name truncates with an ellipsis, and a marker that will not fit
+whole is dropped instead of leaving a stub.
 
 The timing is laid out from the right edge inward, so a narrow pane
 truncates the query text rather than dropping the number you wanted.

@@ -56,12 +56,17 @@ local function query_hints(query)
   local parts = {}
 
   if upper:match "%sWHERE%s" then
-    parts[#parts + 1] = { text = "?", hl = "IfDbHistoryHintWhere" }
+    parts[#parts + 1] = { text = "?", hl = "IfDbHistoryHintWhere", atomic = true }
+    local column = flat:match "%s[Ww][Hh][Ee][Rr][Ee]%s+[%w_]+%.([%w_]+)"
+      or flat:match "%s[Ww][Hh][Ee][Rr][Ee]%s+([%w_]+)"
+    if column then
+      parts[#parts + 1] = { text = column, hl = "IfDbHistoryTarget" }
+    end
   end
 
   if upper:match "%sJOIN%s" then
     local target = flat:match "%s[Jj][Oo][Ii][Nn]%s+([%w_]+)"
-    parts[#parts + 1] = { text = "󰕤", hl = "IfDbHistoryHintJoin" }
+    parts[#parts + 1] = { text = "󰕤", hl = "IfDbHistoryHintJoin", atomic = true }
     if target then
       parts[#parts + 1] = { text = target, hl = "IfDbHistoryTarget" }
     end
@@ -69,16 +74,16 @@ local function query_hints(query)
 
   if upper:match "%sORDER%s+BY%s" then
     local desc = upper:match "%sORDER%s+BY%s+[%w_.]+%s+DESC" ~= nil
-    parts[#parts + 1] = { text = desc and "󰒼" or "󰒽", hl = "IfDbHistoryHintOrder" }
+    parts[#parts + 1] = { text = desc and "󰒼" or "󰒽", hl = "IfDbHistoryHintOrder", atomic = true }
   end
 
   if upper:match "%sGROUP%s+BY%s" then
-    parts[#parts + 1] = { text = "󰒠", hl = "IfDbHistoryHintGroup" }
+    parts[#parts + 1] = { text = "󰒠", hl = "IfDbHistoryHintGroup", atomic = true }
   end
 
   local limit = upper:match "%sLIMIT%s+(%d+)"
   if limit then
-    parts[#parts + 1] = { text = "󰉻" .. limit, hl = "IfDbHistoryHintLimit" }
+    parts[#parts + 1] = { text = "L" .. limit, hl = "IfDbHistoryHintLimit", atomic = true }
   end
 
   return parts
@@ -119,7 +124,7 @@ local function render_compact(entries, win_width)
     local line_idx = line_nr - 1
     local segments = {}
 
-    segments[#segments + 1] = { text = os.date("%H:%M", entry.timestamp), hl = "IfDbHistoryTime" }
+    segments[#segments + 1] = { text = os.date("%H:%M", entry.timestamp), hl = "IfDbHistoryTime", atomic = true }
 
     local _, verb = history.format_summary(entry)
     segments[#segments + 1] = { text = "  ", hl = nil }
@@ -146,13 +151,19 @@ local function render_compact(entries, win_width)
     local line = ""
     for _, seg in ipairs(segments) do
       local room = body_max - vim.fn.strdisplaywidth(line)
-      local text = truncate(seg.text, room)
-      if text ~= "" then
-        local start_col = #line
-        line = line .. text
-        if seg.hl then
-          r_highlights[#r_highlights + 1] = { line = line_idx, hl = seg.hl, col_start = start_col, col_end = #line }
-        end
+      local text
+      if seg.atomic then
+        text = vim.fn.strdisplaywidth(seg.text) <= room and seg.text or ""
+      else
+        text = truncate(seg.text, room)
+      end
+      if text == "" then
+        break
+      end
+      local start_col = #line
+      line = line .. text
+      if seg.hl then
+        r_highlights[#r_highlights + 1] = { line = line_idx, hl = seg.hl, col_start = start_col, col_end = #line }
       end
     end
 
