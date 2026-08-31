@@ -6,8 +6,7 @@ M.defaults = {
   executor = "cli",
   layout = {
     top_ratio = 0.4,
-    schema_width = 0.22,
-    history_width = 0.28,
+    left_width = 0.22,
   },
   sidebar = {
     show_system_schemas = true,

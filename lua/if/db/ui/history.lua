@@ -47,7 +47,6 @@ end
 ---@param win_width number
 ---@param cfg table
 ---@return string[] lines, table[] highlights, table[] entry_line_map
-local TIME_WIDTH = 5
 
 ---@param query string
 ---@return { text: string, hl: string }[]
@@ -85,23 +84,6 @@ local function query_hints(query)
   return parts
 end
 
----@param entries IfDb.HistoryEntry[]
----@return { entry: IfDb.HistoryEntry, count: integer, first: integer, last: integer }[]
-local function collapse(entries)
-  local groups = {}
-  for i, entry in ipairs(entries) do
-    local key = entry.query:gsub("%s+", " ")
-    local prev = groups[#groups]
-    if prev and prev.key == key then
-      prev.count = prev.count + 1
-      prev.last = i
-    else
-      groups[#groups + 1] = { key = key, entry = entry, count = 1, first = i, last = i }
-    end
-  end
-  return groups
-end
-
 ---@param s string
 ---@param max integer
 ---@return string
@@ -133,20 +115,11 @@ local function render_compact(entries, win_width)
   local r_highlights = {}
   local r_line_map = {}
 
-  local prev_time = nil
-
-  for line_nr, group in ipairs(collapse(entries)) do
-    local entry = group.entry
+  for line_nr, entry in ipairs(entries) do
     local line_idx = line_nr - 1
     local segments = {}
 
-    local time_str = os.date("%H:%M", entry.timestamp)
-    if time_str == prev_time then
-      segments[#segments + 1] = { text = string.rep(" ", TIME_WIDTH), hl = nil }
-    else
-      segments[#segments + 1] = { text = time_str, hl = "IfDbHistoryTime" }
-      prev_time = time_str
-    end
+    segments[#segments + 1] = { text = os.date("%H:%M", entry.timestamp), hl = "IfDbHistoryTime" }
 
     local _, verb = history.format_summary(entry)
     segments[#segments + 1] = { text = "  ", hl = nil }
@@ -164,13 +137,6 @@ local function render_compact(entries, win_width)
     if duration ~= "" then
       right[#right + 1] = { text = duration, hl = "IfDbHistoryDuration" }
     end
-    if group.count > 1 then
-      if #right > 0 then
-        right[#right + 1] = { text = " ", hl = nil }
-      end
-      right[#right + 1] = { text = "×" .. group.count, hl = "Comment" }
-    end
-
     local right_width = 0
     for _, seg in ipairs(right) do
       right_width = right_width + vim.fn.strdisplaywidth(seg.text)
@@ -207,9 +173,7 @@ local function render_compact(entries, win_width)
     local row_hl = (line_nr % 2 == 1) and "IfDbHistoryRowOdd" or "IfDbHistoryRowEven"
     table.insert(r_highlights, 1, { line = line_idx, hl = row_hl, col_start = 0, col_end = -1 })
 
-    for entry_idx = group.first, group.last do
-      r_line_map[entry_idx] = { start = line_nr, finish = line_nr }
-    end
+    r_line_map[line_nr] = { start = line_nr, finish = line_nr }
   end
 
   return r_lines, r_highlights, r_line_map

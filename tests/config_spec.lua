@@ -23,8 +23,7 @@ describe("config", function()
 
     it("has layout proportions", function()
       assert.are.equal(0.4, config.defaults.layout.top_ratio)
-      assert.are.equal(0.22, config.defaults.layout.schema_width)
-      assert.are.equal(0.28, config.defaults.layout.history_width)
+      assert.are.equal(0.22, config.defaults.layout.left_width)
     end)
 
     it("has history configuration", function()

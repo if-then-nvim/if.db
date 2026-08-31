@@ -10,29 +10,26 @@ PostgreSQL, MySQL, MariaDB and SQLite.
 ## Layout
 
 ```
-┌──────────────┬──────────────────────┬──────────────┐
-│ schema       │ query                │ history      │
-├──────────────┴──────────────────────┴──────────────┤
-│ result                                             │
-└─────────────────────────────────────────────────────┘
+┌──────────────┬─────────────────────────────────────┐
+│ schema       │ query                               │
+├──────────────┼─────────────────────────────────────┤
+│ history      │ result                              │
+└──────────────┴─────────────────────────────────────┘
 ```
 
-Browse the schema on the left, write on the right of it, read what you ran
-on the far right, and get the answer across the full width below. The
-arrangement is fixed, because a result table wants the whole width and
-every alternative traded that away. The proportions are yours:
+Reference on the left, work on the right. Two dividers, each running the
+full width or the full height, so nothing sits at a ragged offset. The
+arrangement is fixed; the proportions are yours:
 
 ```lua
 layout = {
-  top_ratio = 0.4,       -- height of the top strip
-  schema_width = 0.22,   -- of the screen, floor of 24 columns
-  history_width = 0.28,  -- of the screen, floor of 36 columns
+  top_ratio = 0.4,     -- height of the schema and query row
+  left_width = 0.22,   -- width of the schema and history column
 },
 ```
 
-The query pane takes what is left, with a floor of 30 columns. When the
-terminal cannot give every pane its floor, the query pane yields first:
-SQL survives being narrow, a truncated table name does not.
+The left column never goes under 36 columns, which is what the history
+shorthand needs to stay on one line, and never over half the screen.
 
 ## Requirements
 
@@ -78,11 +75,11 @@ The history pane is written in a shorthand rather than echoing the SQL,
 which is already on screen in the editor beside it:
 
 ```
-10:35  SEL stories ⋈ users ↓ ⊞     53ms ×2
-       SEL users                      31ms
-10:34  SEL users ↑                 50ms ×3
-10:33  UPD users ?                    60ms
-       SEL stories ⊤20                99ms
+10:35  SEL stories ⋈ users ↓ ⊞     53ms
+10:35  SEL users                   31ms
+10:34  SEL users ↑                 50ms
+10:33  UPD users ?                 60ms
+10:33  SEL stories ⊤20             99ms
 ```
 
 | Symbol | Clause |
@@ -93,9 +90,7 @@ which is already on screen in the editor beside it:
 | `⊞` | `GROUP BY` |
 | `⊤n` | `LIMIT n` |
 
-Three things keep it quiet. The timestamp prints only when it changes.
-Adjacent repeats of the same query collapse into one row with a count.
-And the timing is laid out from the right edge inward, so a narrow pane
+The timing is laid out from the right edge inward, so a narrow pane
 truncates the query text rather than dropping the number you wanted.
 
 ## Keymaps
@@ -168,8 +163,7 @@ require("if.db").setup {
 
   layout = {
     top_ratio = 0.4,
-    schema_width = 0.22,
-    history_width = 0.28,
+    left_width = 0.22,
   },
 
   sidebar = {

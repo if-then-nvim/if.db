@@ -150,6 +150,5 @@
 ---@alias IfDb.DatabaseType "postgres"|"mysql"|"sqlite"|"unknown"
 
 ---@class IfDb.LayoutConfig
----@field top_ratio number Top strip height as a fraction of the screen
----@field schema_width number Schema pane width as a fraction of the screen
----@field history_width number History pane width as a fraction of the screen
+---@field top_ratio number Top row height as a fraction of the screen
+---@field left_width number Left column width as a fraction of the screen

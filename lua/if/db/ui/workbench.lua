@@ -14,35 +14,24 @@ local function get_history_ui()
   return require "if.db.ui.history"
 end
 
-local MIN_SCHEMA_WIDTH = 24
-local MIN_HISTORY_WIDTH = 36
-local MIN_QUERY_WIDTH = 30
+local MIN_LEFT_WIDTH = 36
+local MIN_RIGHT_WIDTH = 40
 local MIN_PANE_HEIGHT = 3
-local SEPARATORS = 2
 
----@return { schema: integer, history: integer, top: integer }
+---@return { left: integer, top: integer }
 local function geometry()
   local cfg = config.get().layout
   local total_width = vim.o.columns
   local total_height = vim.o.lines - 4
 
-  local schema = math.max(MIN_SCHEMA_WIDTH, math.floor(total_width * cfg.schema_width))
-  local history = math.max(MIN_HISTORY_WIDTH, math.floor(total_width * cfg.history_width))
-
-  local spare = total_width - schema - history - MIN_QUERY_WIDTH - SEPARATORS
-  if spare < 0 then
-    local shrink = math.min(-spare, history - MIN_HISTORY_WIDTH)
-    history = history - shrink
-    spare = spare + shrink
-  end
-  if spare < 0 then
-    schema = schema - math.min(-spare, schema - MIN_SCHEMA_WIDTH)
-  end
+  local left = math.max(MIN_LEFT_WIDTH, math.floor(total_width * cfg.left_width))
+  left = math.min(left, math.max(MIN_LEFT_WIDTH, total_width - MIN_RIGHT_WIDTH))
+  left = math.min(left, math.floor(total_width / 2))
 
   local top = math.max(MIN_PANE_HEIGHT, math.floor(total_height * cfg.top_ratio))
   top = math.min(top, total_height - MIN_PANE_HEIGHT)
 
-  return { schema = schema, history = history, top = top }
+  return { left = left, top = top }
 end
 
 local M = {}
@@ -294,17 +283,19 @@ function M._build_layout()
 
   local sidebar_win = vim.api.nvim_get_current_win()
   vim.cmd "belowright split"
-  local result_win = vim.api.nvim_get_current_win()
+  local history_win = vim.api.nvim_get_current_win()
 
   vim.api.nvim_set_current_win(sidebar_win)
   vim.cmd "belowright vsplit"
   local editor_win = vim.api.nvim_get_current_win()
+
+  vim.api.nvim_set_current_win(history_win)
   vim.cmd "belowright vsplit"
-  local history_win = vim.api.nvim_get_current_win()
+  local result_win = vim.api.nvim_get_current_win()
 
   vim.api.nvim_win_set_height(sidebar_win, g.top)
-  vim.api.nvim_win_set_width(sidebar_win, g.schema)
-  vim.api.nvim_win_set_width(history_win, g.history)
+  vim.api.nvim_win_set_width(sidebar_win, g.left)
+  vim.api.nvim_win_set_width(history_win, g.left)
 
   return { sidebar = sidebar_win, history = history_win, editor = editor_win, result = result_win }
 end
@@ -417,10 +408,10 @@ function M._resize_layout()
 
   if M.sidebar_win and vim.api.nvim_win_is_valid(M.sidebar_win) then
     vim.api.nvim_win_set_height(M.sidebar_win, g.top)
-    vim.api.nvim_win_set_width(M.sidebar_win, g.schema)
+    vim.api.nvim_win_set_width(M.sidebar_win, g.left)
   end
   if M.history_win and vim.api.nvim_win_is_valid(M.history_win) then
-    vim.api.nvim_win_set_width(M.history_win, g.history)
+    vim.api.nvim_win_set_width(M.history_win, g.left)
   end
 end
 
