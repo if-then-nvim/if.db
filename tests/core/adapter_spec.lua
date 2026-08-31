@@ -167,11 +167,10 @@ describe("adapter", function()
     end)
 
     describe("sqlite", function()
-      it("returns sqlite3 with database path", function()
+      it("asks sqlite3 for headers and tab separators", function()
         local cmd, args = adapter.build_cmd "sqlite:///tmp/test.db"
         assert.are.equal("sqlite3", cmd)
-        assert.are.equal(1, #args)
-        assert.are.equal("/tmp/test.db", args[1])
+        assert.are.same({ "-header", "-separator", "\t", "/tmp/test.db" }, args)
       end)
     end)
 

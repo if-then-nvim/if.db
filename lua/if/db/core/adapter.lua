@@ -138,7 +138,7 @@ end
 ---@return string command, string[] args
 function M._build_sqlite(url)
   local parsed = M.parse_url(url)
-  return "sqlite3", { parsed.database }
+  return "sqlite3", { "-header", "-separator", "\t", parsed.database }
 end
 
 return M

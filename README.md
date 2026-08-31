@@ -260,13 +260,16 @@ highlights = {
 | `IfDbHistoryHeader` | `Title`, bold |
 | `IfDbHistoryRowOdd` `IfDbHistoryRowEven` | computed |
 | `IfDbHistoryTime` | `Comment` |
-| `IfDbHistoryVerb` `IfDbHistoryTarget` | `Keyword`, `Type` |
 | `IfDbHistoryDuration` | `Number` |
-| `IfDbHistoryHintWhere` | `WarningMsg` |
-| `IfDbHistoryHintJoin` | `Special` |
-| `IfDbHistoryHintOrder` | `Keyword` |
-| `IfDbHistoryHintGroup` | `Type` |
-| `IfDbHistoryHintLimit` | `Number` |
+| `IfDbHistoryVerb` | `@keyword.sql` |
+| `IfDbHistoryTarget` | `@type.sql` |
+| `IfDbHistoryColumn` | `@variable.member.sql` |
+| `IfDbHistoryCount` | `@number.sql` |
+| `IfDbHistoryHint*` | `@keyword.sql`, one group per clause |
+
+The shorthand borrows the colours tree-sitter gives SQL, so a verb, a
+table and a column read the same in the history pane as they do in the
+editor above it. Override any group to break that link.
 
 ## Screenshots
 

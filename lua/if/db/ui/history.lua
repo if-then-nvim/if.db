@@ -60,7 +60,7 @@ local function query_hints(query)
     local column = flat:match "%s[Ww][Hh][Ee][Rr][Ee]%s+[%w_]+%.([%w_]+)"
       or flat:match "%s[Ww][Hh][Ee][Rr][Ee]%s+([%w_]+)"
     if column then
-      parts[#parts + 1] = { text = column, hl = "IfDbHistoryTarget" }
+      parts[#parts + 1] = { text = column, hl = "IfDbHistoryColumn" }
     end
   end
 
@@ -83,7 +83,13 @@ local function query_hints(query)
 
   local limit = upper:match "%sLIMIT%s+(%d+)"
   if limit then
-    parts[#parts + 1] = { text = "󰆐 " .. limit, hl = "IfDbHistoryHintLimit", atomic = true }
+    parts[#parts + 1] = {
+      text = "󰆐 " .. limit,
+      hl = "IfDbHistoryHintLimit",
+      atomic = true,
+      tail_hl = "IfDbHistoryCount",
+      tail = #limit,
+    }
   end
 
   return parts
@@ -164,6 +170,10 @@ local function render_compact(entries, win_width)
       line = line .. text
       if seg.hl then
         r_highlights[#r_highlights + 1] = { line = line_idx, hl = seg.hl, col_start = start_col, col_end = #line }
+      end
+      if seg.tail_hl then
+        r_highlights[#r_highlights + 1] =
+          { line = line_idx, hl = seg.tail_hl, col_start = #line - seg.tail, col_end = #line }
       end
     end
 
