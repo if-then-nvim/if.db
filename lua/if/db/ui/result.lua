@@ -136,7 +136,7 @@ local function format_error(raw)
   local highlights = {}
 
   table.insert(lines, "")
-  table.insert(lines, " ✗ Query Error")
+  table.insert(lines, " 󰅖 Query Error")
   table.insert(highlights, { line = 1, hl = "ErrorMsg", col_start = 0, col_end = -1 })
   table.insert(lines, "")
 
@@ -233,7 +233,7 @@ local function format_mutation_result(verb, count)
     TRUNCATE = { icon = icons.mut_delete, hl = "IfDbHistoryTruncate", label = "truncated" },
   }
 
-  local cfg = verb_config[verb] or { icon = "✓", hl = "String", label = "completed" }
+  local cfg = verb_config[verb] or { icon = "󰄬", hl = "String", label = "completed" }
 
   table.insert(lines, "")
 

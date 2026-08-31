@@ -21,9 +21,9 @@ local M = {
   column = "󰠵",
   column_pk = "󰌋",
 
-  connected = "✓",
-  loading = "◐",
-  idle = "○",
+  connected = "󰄬",
+  loading = "󰪡",
+  idle = "󰄰",
 
   time = "󰅐",
   rows = "󰓫",

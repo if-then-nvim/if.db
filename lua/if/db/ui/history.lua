@@ -61,7 +61,7 @@ local function query_hints(query)
 
   if upper:match "%sJOIN%s" then
     local target = flat:match "%s[Jj][Oo][Ii][Nn]%s+([%w_]+)"
-    parts[#parts + 1] = { text = "⋈", hl = "IfDbHistoryHintJoin" }
+    parts[#parts + 1] = { text = "󰕤", hl = "IfDbHistoryHintJoin" }
     if target then
       parts[#parts + 1] = { text = target, hl = "IfDbHistoryTarget" }
     end
@@ -69,16 +69,16 @@ local function query_hints(query)
 
   if upper:match "%sORDER%s+BY%s" then
     local desc = upper:match "%sORDER%s+BY%s+[%w_.]+%s+DESC" ~= nil
-    parts[#parts + 1] = { text = desc and "↓" or "↑", hl = "IfDbHistoryHintOrder" }
+    parts[#parts + 1] = { text = desc and "󰒼" or "󰒽", hl = "IfDbHistoryHintOrder" }
   end
 
   if upper:match "%sGROUP%s+BY%s" then
-    parts[#parts + 1] = { text = "⊞", hl = "IfDbHistoryHintGroup" }
+    parts[#parts + 1] = { text = "󰒠", hl = "IfDbHistoryHintGroup" }
   end
 
   local limit = upper:match "%sLIMIT%s+(%d+)"
   if limit then
-    parts[#parts + 1] = { text = "⊤" .. limit, hl = "IfDbHistoryHintLimit" }
+    parts[#parts + 1] = { text = "󰉻" .. limit, hl = "IfDbHistoryHintLimit" }
   end
 
   return parts

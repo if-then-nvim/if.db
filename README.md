@@ -75,20 +75,23 @@ The history pane is written in a shorthand rather than echoing the SQL,
 which is already on screen in the editor beside it:
 
 ```
-10:35  SEL stories ⋈ users ↓ ⊞     53ms
+10:35  SEL stories 󰕤 users 󰒼 󰒠     53ms
 10:35  SEL users                   31ms
-10:34  SEL users ↑                 50ms
+10:34  SEL users 󰒽                 50ms
 10:33  UPD users ?                 60ms
-10:33  SEL stories ⊤20             99ms
+10:33  SEL stories 󰉻20             99ms
 ```
 
-| Symbol | Clause |
-|---|---|
-| `?` | `WHERE` |
-| `⋈ name` | `JOIN name` |
-| `↑` `↓` | `ORDER BY`, ascending or descending |
-| `⊞` | `GROUP BY` |
-| `⊤n` | `LIMIT n` |
+| Symbol | Codepoint | Clause |
+|---|---|---|
+| `?` | — | `WHERE` |
+| `󰕤 name` | `U+F0564` | `JOIN name` |
+| `󰒽` `󰒼` | `U+F04BD` `U+F04BC` | `ORDER BY`, ascending or descending |
+| `󰒠` | `U+F04A0` | `GROUP BY` |
+| `󰉻n` | `U+F027B` | `LIMIT n` |
+
+Every symbol comes from the Nerd Font the plugin already needs, so none
+of them depend on what your system happens to fall back to.
 
 The timing is laid out from the right edge inward, so a narrow pane
 truncates the query text rather than dropping the number you wanted.

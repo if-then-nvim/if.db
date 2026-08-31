@@ -146,10 +146,10 @@ history ~
     - `persist`: Save history to disk (default: true)
     - `filter_by_connection`: Filter by current connection (default: true)
 
-    Queries are written in a shorthand: `?` for WHERE, `⋈ name` for JOIN,
-    `↑` or `↓` for ORDER BY, `⊞` for GROUP BY, `⊤n` for LIMIT. The
-    timestamp prints only when it changes and adjacent repeats collapse
-    into one row with a count.
+    Queries are written in a shorthand: `?` for WHERE, `󰕤 name` for JOIN,
+    `󰒽` or `󰒼` for ORDER BY, `󰒠` for GROUP BY, `󰉻n` for LIMIT. Each
+    symbol is a Nerd Font glyph rather than a maths character, so none
+    depends on a system fallback.
 
                                                            *if-db-config-keymaps*
 keymaps ~
