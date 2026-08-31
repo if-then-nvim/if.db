@@ -119,15 +119,6 @@ function M.setup()
     IfDbHistoryHintOrder = { link = "Keyword" },
     IfDbHistoryHintGroup = { link = "Type" },
     IfDbHistoryHintLimit = { link = "Number" },
-
-    IfDbTabActive = { bg = "#3a3a4a", bold = true },
-    IfDbTabActiveIcon = { bg = "#3a3a4a", fg = "#a6e3a1" },
-    IfDbTabInactive = { link = "Comment" },
-    IfDbTabInactiveIcon = { link = "Comment" },
-    IfDbTabModified = { link = "WarningMsg" },
-    IfDbTabIconSaved = { link = "String" },
-    IfDbTabIconUnsaved = { link = "Function" },
-    IfDbTabbarBg = { link = "Normal" },
   }
 
   for name, opts in pairs(highlights) do
