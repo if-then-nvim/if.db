@@ -54,7 +54,7 @@ the full width, which is what a table wants.
 
 ```lua
 {
-  "if-then-end/if.db",
+  "if-then-nvim/if.db",
   dependencies = {
     "MunifTanjim/nui.nvim",
     "nvim-lua/plenary.nvim",       -- Optional: for async execution

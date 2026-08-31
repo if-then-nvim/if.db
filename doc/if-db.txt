@@ -54,7 +54,7 @@ INSTALLATION                                                *if-db-installation*
 
 Using lazy.nvim: >lua
     {
-      "if-then-end/if.db",
+      "if-then-nvim/if.db",
       dependencies = { "MunifTanjim/nui.nvim" },
       config = function()
         require("if.db").setup({
