@@ -1,0 +1,472 @@
+*if-db.txt*  A lightweight database client for Neovim
+
+==============================================================================
+CONTENTS                                                        *if-db-contents*
+
+    1. Introduction ............................ |if-db-introduction|
+    2. Requirements ............................ |if-db-requirements|
+    3. Installation ............................ |if-db-installation|
+    4. Configuration ........................... |if-db-configuration|
+    5. Commands ................................ |if-db-commands|
+    6. Keymaps ................................. |if-db-keymaps|
+    7. Highlights .............................. |if-db-highlights|
+    8. Types ................................... |if-db-types|
+
+==============================================================================
+INTRODUCTION                                                *if-db-introduction*
+
+if.db is a lightweight database client for Neovim. Query PostgreSQL,
+MySQL, MariaDB, and SQLite databases directly from your editor.
+
+Features:
+- Multi-database support (PostgreSQL, MySQL, MariaDB, SQLite)
+- Fixed four-pane layout with configurable proportions
+- Schema browser with sidebar navigation
+- Query history with timing and re-execution
+- Query editor with multiple tabs
+- Save and organize queries per connection
+- Result viewer with type-aware highlighting
+
+Layout: >
+
+    ┌──────────────┬──────────────────┬──────────────┐
+    │ schema       │ query            │ history      │
+    ├──────────────┴──────────────────┴──────────────┤
+    │ result                                         │
+    └────────────────────────────────────────────────┘
+<
+
+==============================================================================
+REQUIREMENTS                                                *if-db-requirements*
+
+- Neovim >= 0.9.0
+- nui.nvim (https://github.com/MunifTanjim/nui.nvim)
+- vim-dadbod (https://github.com/tpope/vim-dadbod) (optional, for `executor = "dadbod"`)
+- plenary.nvim (https://github.com/nvim-lua/plenary.nvim) (optional, for async execution)
+- nvim-cmp (https://github.com/hrsh7th/nvim-cmp) (optional, for autocompletion)
+- Database CLI tools:
+  - `psql` for PostgreSQL
+  - `mysql` for MySQL/MariaDB
+  - `sqlite3` for SQLite
+
+==============================================================================
+INSTALLATION                                                *if-db-installation*
+
+Using lazy.nvim: >lua
+    {
+      "if-then-end/if.db",
+      dependencies = { "MunifTanjim/nui.nvim" },
+      config = function()
+        require("if.db").setup({
+          connections = {
+            { name = "local", url = "postgres://localhost/mydb" },
+          },
+        })
+      end,
+    }
+<
+
+AUTOCOMPLETION                                             *if-db-autocompletion*
+
+If you use nvim-cmp, add `ifdb` to your sources to enable SQL autocompletion: >lua
+
+    require("cmp").setup({
+      sources = {
+        { name = "if.db" },
+        -- other sources...
+      },
+    })
+<
+
+==============================================================================
+CONFIGURATION                                              *if-db-configuration*
+
+Call `require("if.db").setup(opts)` with the following options:
+
+                                                        *if-db-config-connections*
+connections ~
+    List of database connections.
+    Type: `IfDb.Connection[]`
+    Default: `{}`
+
+    Each connection has:
+    - `name`: Display name for the connection
+    - `url`: Database connection URL (supports env vars like `$DATABASE_URL`)
+
+                                                          *if-db-config-executor*
+executor ~
+    Executor backend for running queries.
+    Type: `IfDb.ExecutorBackend`
+    Default: `"cli"`
+
+    - `"cli"`: Self-contained, calls psql/mysql/sqlite3 directly (default)
+    - `"dadbod"`: Uses vim-dadbod (requires tpope/vim-dadbod plugin)
+
+                                                            *if-db-config-layout*
+layout ~
+    Pane proportions. The arrangement itself is fixed: schema, query and
+    history across the top, result across the full width below.
+    Type: `IfDb.LayoutConfig`
+
+    - `top_ratio`: Top strip height as a fraction of the screen
+      (default: 0.4).
+    - `schema_width`: Schema pane width (default: 0.22), never under 24
+      columns.
+    - `history_width`: History pane width (default: 0.28), never under 36
+      columns, which is what the shorthand needs.
+
+    The query pane takes the remaining width, never under 30 columns.
+
+                                                           *if-db-config-sidebar*
+sidebar ~
+    Sidebar configuration.
+    Type: `IfDb.SidebarConfig`
+
+    - `show_system_schemas`: Show system schemas like pg_catalog (default: true)
+
+    Column types are hidden; press `t` in the sidebar to show them.
+
+                                                            *if-db-config-result*
+result ~
+    Result configuration.
+    Type: `IfDb.ResultConfig`
+
+    - `max_width`: Maximum result width (default: 120)
+    - `max_height`: Maximum result height (default: 20)
+    - `show_line_number`: Show line numbers (default: true)
+
+    Results always render as a table with zebra striping and type-aware
+    highlighting.
+
+                                                           *if-db-config-history*
+history ~
+    History configuration.
+    Type: `IfDb.HistoryConfig`
+
+    - `max_entries`: Maximum history entries (default: 100)
+    - `on_select`: Action on Enter key - "execute" or "load" (default: "execute")
+    - `persist`: Save history to disk (default: true)
+    - `filter_by_connection`: Filter by current connection (default: true)
+
+    Queries are written in a shorthand: `?` for WHERE, `⋈ name` for JOIN,
+    `↑` or `↓` for ORDER BY, `⊞` for GROUP BY, `⊤n` for LIMIT. The
+    timestamp prints only when it changes and adjacent repeats collapse
+    into one row with a count.
+
+                                                           *if-db-config-keymaps*
+keymaps ~
+    Global keymap configuration.
+    Type: `IfDb.Keymaps`
+
+    Global:
+    - `open`: Keymap to open if.db (default: "<Leader>db")
+    - `execute`: Keymap to execute query (default: "<CR>")
+    - `close`: Keymap to close if.db (default: "q")
+
+    Sidebar:
+    - `sidebar.toggle_expand`: Toggle expand/collapse or open (default: {"<CR>", "o"})
+    - `sidebar.refresh`: Refresh sidebar (default: "R")
+    - `sidebar.rename`: Rename saved query (default: "r")
+    - `sidebar.new_query`: Create new query (default: "n")
+    - `sidebar.copy_name`: Copy node name (default: "y")
+    - `sidebar.insert_template`: Insert table query template (default: "i")
+    - `sidebar.delete`: Delete saved query (default: "d")
+    - `sidebar.copy_query`: Copy saved query content (default: "c")
+    - `sidebar.paste_query`: Paste saved query (default: "p")
+    - `sidebar.to_editor`: Move focus to editor (default: "<Tab>")
+    - `sidebar.to_history`: Move focus to history (default: "<S-Tab>")
+
+    History:
+    - `history.select`: Select entry (load/exec) (default: "<CR>")
+    - `history.execute`: Re-execute query (default: "R")
+    - `history.copy`: Copy query text (default: "y")
+    - `history.delete`: Delete entry (default: "d")
+    - `history.clear`: Clear all history (default: "C")
+    - `history.to_sidebar`: Move focus to sidebar (default: "<Tab>")
+    - `history.to_result`: Move focus to result (default: "<S-Tab>")
+
+    Editor:
+    - `editor.execute_insert`: Execute in insert mode (default: "<C-CR>")
+    - `editor.execute_leader`: Execute with leader (default: "<Leader>r")
+    - `editor.save`: Save query (default: "<C-s>")
+    - `editor.next_tab`: Next query tab (default: "gt")
+    - `editor.prev_tab`: Previous query tab (default: "gT")
+    - `editor.close_tab`: Close current tab (default: "<Leader>w")
+    - `editor.to_result`: Move focus to result (default: "<Tab>")
+    - `editor.to_sidebar`: Move focus to sidebar (default: "<S-Tab>")
+
+    Result:
+    - `result.yank_row`: Yank current row (default: "y")
+    - `result.yank_all`: Yank all rows (default: "Y")
+    - `result.to_sidebar`: Move focus to sidebar (default: "<Tab>")
+    - `result.to_editor`: Move focus to editor (default: "<S-Tab>")
+
+                                                        *if-db-config-highlights*
+highlights ~
+    Highlight group overrides.
+    Type: `table<string, vim.api.keyset.highlight>`
+    Default: `{}`
+
+    Override any IfDb highlight group. Applied after all defaults, so these
+    always take priority. See |if-db-highlights| for available groups.
+
+Example configuration: >lua
+    require("if.db").setup({
+      connections = {
+        { name = "local", url = "postgres://localhost/mydb" },
+        { name = "prod", url = "$DATABASE_URL" },
+      },
+      executor = "cli",
+      layout = {
+        top_ratio = 0.4,
+        schema_width = 0.22,
+        history_width = 0.28,
+      },
+      sidebar = {
+        show_system_schemas = true,
+      },
+      result = {
+        max_width = 120,
+        max_height = 20,
+        show_line_number = true,
+      },
+      history = {
+        max_entries = 100,
+        on_select = "execute",
+        persist = true,
+        filter_by_connection = true,
+      },
+      keymaps = {
+        open = "<Leader>db",
+        execute = "<CR>",
+      },
+      highlights = {
+        IfDbHeader = { bg = "#ff6600", fg = "#000000" },
+      },
+    })
+<
+
+==============================================================================
+COMMANDS                                                        *if-db-commands*
+
+                                                                        *:IfDb*
+:IfDb                   Open the if.db sidebar. If already open, switches
+                        to its tab.
+
+                                                                   *:IfDbClose*
+:IfDbClose              Close if.db and clean up all windows.
+
+==============================================================================
+KEYMAPS                                                          *if-db-keymaps*
+
+SIDEBAR KEYMAPS                                          *if-db-keymaps-sidebar*
+
+    `<CR>` or `o`       Toggle node expansion or open query
+    `t`                 Show or hide column types
+    `<Tab>`             Move focus to editor window
+    `S`                 Generate SELECT * query for table
+    `i`                 Generate INSERT template for table
+    `d`                 Delete saved query (with confirmation)
+    `q`                 Close if.db
+
+EDITOR KEYMAPS                                            *if-db-keymaps-editor*
+
+    `<CR>`              Execute query (normal mode)
+    `<C-CR>`            Execute query (insert mode)
+    `<C-s>`             Save current query
+    `gt`                Next tab
+    `gT`                Previous tab
+    `<Leader>w`         Close current tab
+    `<Tab>`             Move focus to result window
+    `<S-Tab>`           Move focus to sidebar
+    `q`                 Close if.db
+
+HISTORY KEYMAPS                                          *if-db-keymaps-history*
+
+    `<CR>`              Load or execute query (based on config)
+    `R`                 Re-execute query immediately
+    `y`                 Copy query to clipboard
+    `d`                 Delete entry (with confirmation)
+    `C`                 Clear all history (with confirmation)
+    `<Tab>`             Move focus to sidebar
+    `<S-Tab>`           Move focus to result
+    `q`                 Close if.db
+
+RESULT KEYMAPS                                            *if-db-keymaps-result*
+
+    `y`                 Yank current row as JSON
+    `Y`                 Yank all rows as JSON
+    `<Tab>`             Move focus to sidebar
+    `<S-Tab>`           Move focus to editor
+    `q`                 Close if.db
+
+==============================================================================
+HIGHLIGHTS                                                    *if-db-highlights*
+
+All highlight groups can be overridden by defining them before calling
+`require("if.db").setup()`. Groups not already defined will be set to their
+default values. Groups marked with (computed) are always recalculated based
+on your colorscheme.
+
+RESULT                                                *if-db-highlights-result*
+
+    `IfDbRowOdd`        Odd row background (computed)       ~Normal bg - 10
+    `IfDbRowEven`       Even row background (computed)      ~Normal bg + 5
+    `IfDbHeader`        Result header row (computed)        Function fg bg
+    `IfDbSeparator`     Result separator lines              Comment
+    `IfDbCellActive`    Active cell highlight               CursorLine
+
+WINDOW                                                *if-db-highlights-window*
+
+    `IfDbFloat`         Float window background             NormalFloat
+    `IfDbBorder`        Window border                       WinSeparator
+    `IfDbTitle`         Window title text                   Title
+
+DATA TYPES                                         *if-db-highlights-datatypes*
+
+    `IfDbNull`          NULL values                         Comment
+    `IfDbNumber`        Numeric values                      Number
+    `IfDbString`        String values                       Normal
+    `IfDbBoolean`       Boolean values                      Boolean
+    `IfDbDateTime`      Date/time values                    Special
+    `IfDbUuid`          UUID values                         Constant
+    `IfDbJson`          JSON values                         Function
+
+SCHEMA                                                *if-db-highlights-schema*
+
+    `IfDbTable`         Table names                         Type
+    `IfDbKey`           Key names                           Keyword
+    `IfDbPK`            Primary key indicator               ErrorMsg
+    `IfDbFK`            Foreign key indicator               Function
+
+SIDEBAR                                              *if-db-highlights-sidebar*
+
+    DB brand icons:
+    `IfDbIconDb`              Default DB icon color         Number
+    `IfDbIconPostgres`        PostgreSQL brand color        fg=#4169E1 (bold)
+    `IfDbIconMysql`           MySQL brand color             fg=#4479A1 (bold)
+    `IfDbIconMariadb`         MariaDB brand color           fg=#003545 (bold)
+    `IfDbIconSqlite`          SQLite brand color            fg=#003B57 (bold)
+    `IfDbIconRedis`           Redis brand color             fg=#FF4438 (bold)
+    `IfDbIconMongodb`         MongoDB brand color           fg=#47A248 (bold)
+
+    Icon colors:
+    `IfDbSidebarIconConnection`   Connection icon           Number
+    `IfDbSidebarIconActive`       Active connection icon    String
+    `IfDbSidebarIconNewQuery`     New query icon            Function
+    `IfDbSidebarIconBuffers`      Buffers icon              Function
+    `IfDbSidebarIconSaved`        Saved queries icon        Keyword
+    `IfDbSidebarIconSchemas`      Schemas icon              Special
+    `IfDbSidebarIconSchema`       Schema icon               Type
+    `IfDbSidebarIconTable`        Table icon                Type
+    `IfDbSidebarIconColumn`       Column icon               Function
+    `IfDbSidebarIconPK`           Primary key icon          ErrorMsg
+
+    Text:
+    `IfDbSidebarText`             Default text              Normal
+    `IfDbSidebarTextActive`       Active item text          String (bold)
+    `IfDbSidebarType`             Type annotation           Comment
+
+HISTORY                                              *if-db-highlights-history*
+
+    `IfDbHistoryHeader`           Section header            Title (bold)
+    `IfDbHistoryRowOdd`           Odd row background        (computed)
+    `IfDbHistoryRowEven`          Even row background       (computed)
+    `IfDbHistoryTime`             Timestamp                 Comment
+    `IfDbHistoryVerb`             SQL verb                  Keyword
+    `IfDbHistoryTarget`           Target table name         Type
+    `IfDbHistoryDuration`         Execution duration        Number
+    `IfDbHistoryConnName`         Connection name           Normal
+
+    Verb-specific colors:
+    `IfDbHistorySelect`           SELECT queries            Function
+    `IfDbHistoryInsert`           INSERT queries            String
+    `IfDbHistoryUpdate`           UPDATE queries            Type
+    `IfDbHistoryDelete`           DELETE queries            ErrorMsg
+    `IfDbHistoryCreate`           CREATE statements         String
+    `IfDbHistoryDrop`             DROP statements           ErrorMsg
+    `IfDbHistoryAlter`            ALTER statements          Special
+    `IfDbHistoryTruncate`         TRUNCATE statements       WarningMsg
+
+    Hint badges (compact mode):
+    `IfDbHistoryHintWhere`        WHERE clause hint         WarningMsg
+    `IfDbHistoryHintJoin`         JOIN clause hint          Special
+    `IfDbHistoryHintOrder`        ORDER BY hint             Keyword
+    `IfDbHistoryHintGroup`        GROUP BY hint             Type
+    `IfDbHistoryHintLimit`        LIMIT hint                Number
+
+TAB BAR                                              *if-db-highlights-tabbar*
+
+    `IfDbTabActive`               Active tab                bg=#3a3a4a (bold)
+    `IfDbTabActiveIcon`           Active tab icon           bg=#3a3a4a fg=#a6e3a1
+    `IfDbTabInactive`             Inactive tab              Comment
+    `IfDbTabInactiveIcon`         Inactive tab icon         Comment
+    `IfDbTabModified`             Modified indicator        WarningMsg
+    `IfDbTabIconSaved`            Saved query icon          String
+    `IfDbTabIconUnsaved`          Unsaved query icon        Function
+    `IfDbTabbarBg`                Tab bar background        Normal
+
+CUSTOMIZATION EXAMPLE                          *if-db-highlights-customization*
+
+Override highlights via setup: >lua
+    require("if.db").setup({
+      highlights = {
+        IfDbHeader = { bg = "#ff6600", fg = "#000000" },
+        IfDbNull = { fg = "#555555", italic = true },
+      },
+    })
+<
+
+==============================================================================
+TYPES                                                              *if-db-types*
+
+All type definitions are in `lua/if/db/types.lua`.
+
+                                                                 *IfDb.Config*
+IfDb.Config ~
+    Main configuration type.
+    Fields: `connections`, `executor`, `layout`, `sidebar`, `editor`,
+            `result`, `history`, `keymaps`, `highlights`
+
+                                                             *IfDb.Connection*
+IfDb.Connection ~
+    Database connection configuration.
+    Fields: `name` (string), `url` (string)
+
+                                                                 *IfDb.Schema*
+IfDb.Schema ~
+    Database schema information.
+    Fields: `name` (string), `table_count` (number)
+
+                                                                  *IfDb.Table*
+IfDb.Table ~
+    Table information.
+    Fields: `name` (string), `type` ("table" | "view")
+
+                                                                 *IfDb.Column*
+IfDb.Column ~
+    Column information.
+    Fields: `name`, `data_type`, `is_nullable`, `is_primary`
+
+                                                            *IfDb.QueryResult*
+IfDb.QueryResult ~
+    Query execution result.
+    Fields: `columns`, `rows`, `row_count`, `raw`
+
+                                                           *IfDb.HistoryEntry*
+IfDb.HistoryEntry ~
+    History entry information.
+    Fields: `query`, `timestamp`, `conn_name`, `duration_ms`, `row_count`
+
+                                                          *IfDb.HistoryConfig*
+IfDb.HistoryConfig ~
+    History configuration.
+    Fields: `max_entries`, `on_select`, `persist`, `filter_by_connection`
+
+                                                           *IfDb.LayoutConfig*
+IfDb.LayoutConfig ~
+    Pane proportions.
+    Fields: `top_ratio`, `schema_width`, `history_width`
+
+==============================================================================
+vim:tw=78:ts=8:ft=help:norl:

@@ -1,0 +1,126 @@
+local config = require "if.db.config"
+
+describe("config", function()
+  -- Reset config before each test
+  before_each(function()
+    config.options = nil
+  end)
+
+  describe("defaults", function()
+    it("has empty connections by default", function()
+      assert.are.equal(0, #config.defaults.connections)
+    end)
+
+    it("has result configuration", function()
+      assert.is_not_nil(config.defaults.result)
+      assert.are.equal(120, config.defaults.result.max_width)
+    end)
+
+    it("has sidebar configuration", function()
+      assert.is_not_nil(config.defaults.sidebar)
+      assert.is_true(config.defaults.sidebar.show_system_schemas)
+    end)
+
+    it("has layout proportions", function()
+      assert.are.equal(0.4, config.defaults.layout.top_ratio)
+      assert.are.equal(0.22, config.defaults.layout.schema_width)
+      assert.are.equal(0.28, config.defaults.layout.history_width)
+    end)
+
+    it("has history configuration", function()
+      assert.is_not_nil(config.defaults.history)
+      assert.are.equal(100, config.defaults.history.max_entries)
+    end)
+
+    it("has keymaps configuration", function()
+      assert.is_not_nil(config.defaults.keymaps)
+      assert.is_not_nil(config.defaults.keymaps.open)
+      assert.is_not_nil(config.defaults.keymaps.execute)
+      assert.is_not_nil(config.defaults.keymaps.close)
+
+      -- Verify new comprehensive keymaps
+      assert.is_not_nil(config.defaults.keymaps.sidebar)
+      assert.is_not_nil(config.defaults.keymaps.sidebar.toggle_expand)
+      assert.is_not_nil(config.defaults.keymaps.sidebar.refresh)
+
+      assert.is_not_nil(config.defaults.keymaps.history)
+      assert.is_not_nil(config.defaults.keymaps.history.select)
+
+      assert.is_not_nil(config.defaults.keymaps.editor)
+      assert.is_not_nil(config.defaults.keymaps.editor.save)
+
+      assert.is_not_nil(config.defaults.keymaps.result)
+      assert.is_not_nil(config.defaults.keymaps.result.yank_row)
+    end)
+
+    it("has show_system_schemas in sidebar", function()
+      assert.is_true(config.defaults.sidebar.show_system_schemas)
+    end)
+  end)
+
+  describe("setup", function()
+    it("merges user options with defaults", function()
+      config.setup {
+        connections = {
+          { name = "mydb", url = "postgres://localhost/mydb" },
+        },
+      }
+
+      local opts = config.get()
+      assert.are.equal(1, #opts.connections)
+      assert.are.equal("mydb", opts.connections[1].name)
+      assert.is_not_nil(opts.result.max_width)
+    end)
+
+    it("allows overriding nested options", function()
+      config.setup {
+        result = {
+          max_width = 80,
+        },
+      }
+
+      local opts = config.get()
+      assert.are.equal(80, opts.result.max_width)
+      assert.is_not_nil(opts.result.max_height)
+    end)
+
+    it("works with empty options", function()
+      config.setup {}
+      local opts = config.get()
+      assert.is_not_nil(opts)
+      assert.are.equal(0, #opts.connections)
+    end)
+
+    it("works with nil options", function()
+      config.setup(nil)
+      local opts = config.get()
+      assert.is_not_nil(opts)
+    end)
+  end)
+
+  describe("get", function()
+    it("returns defaults if setup not called", function()
+      local opts = config.get()
+      assert.is_not_nil(opts)
+      assert.are.equal(0, #opts.connections)
+    end)
+
+    it("returns configured options after setup", function()
+      config.setup {
+        keymaps = {
+          open = "<Leader>sql",
+        },
+      }
+
+      local opts = config.get()
+      assert.are.equal("<Leader>sql", opts.keymaps.open)
+    end)
+
+    it("returns same instance on multiple calls", function()
+      config.setup {}
+      local opts1 = config.get()
+      local opts2 = config.get()
+      assert.are.equal(opts1, opts2)
+    end)
+  end)
+end)
