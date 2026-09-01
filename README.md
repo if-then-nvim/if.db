@@ -3,8 +3,6 @@
 A database client for Neovim. It shells out to the database's own CLI, so
 there is no driver to install and nothing to compile.
 
-![if.db](./screenshots/hero.webp)
-
 PostgreSQL, MySQL, MariaDB and SQLite.
 
 ## Layout
