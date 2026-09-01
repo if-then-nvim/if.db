@@ -1,51 +1,73 @@
 local M = {}
 
----@param hex string|nil
----@param amount number (negative = darker, positive = lighter)
----@param blue_tint? number (add blue tint, default 0)
----@return string|nil
-local function adjust_color(hex, amount, blue_tint)
-  if not hex or hex == "" then
-    return nil
-  end
-  blue_tint = blue_tint or 0
+-- How far each row background sits from the editor background, as a
+-- fraction of the distance to white on a dark theme or to black on a
+-- light one. Small numbers: the stripe is meant to group rows, not to
+-- draw a second background.
+local STRIPE_ODD = 0.02
+local STRIPE_EVEN = 0.07
+
+---@param hex string
+---@return number relative luminance, 0..1
+local function luminance(hex)
   hex = hex:gsub("^#", "")
-  local r = tonumber(hex:sub(1, 2), 16)
-  local g = tonumber(hex:sub(3, 4), 16)
-  local b = tonumber(hex:sub(5, 6), 16)
-
-  r = math.max(0, math.min(255, r + amount))
-  g = math.max(0, math.min(255, g + amount))
-  b = math.max(0, math.min(255, b + amount + blue_tint))
-
-  return string.format("#%02x%02x%02x", r, g, b)
+  local r = tonumber(hex:sub(1, 2), 16) / 255
+  local g = tonumber(hex:sub(3, 4), 16) / 255
+  local b = tonumber(hex:sub(5, 6), 16) / 255
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b
 end
 
+---Move `hex` a fraction `t` of the way toward `target`, one channel at a
+---time. Every channel moves by the same fraction, so the result keeps the
+---hue it started with; the only targets used are white and black, which
+---carry no hue of their own to bleed in.
+---@param hex string
+---@param target string
+---@param t number 0..1
+---@return string
+local function blend(hex, target, t)
+  hex = hex:gsub("^#", "")
+  target = target:gsub("^#", "")
+  local out = {}
+  for i = 0, 2 do
+    local a = tonumber(hex:sub(i * 2 + 1, i * 2 + 2), 16)
+    local b = tonumber(target:sub(i * 2 + 1, i * 2 + 2), 16)
+    out[i + 1] = math.floor(a + (b - a) * t + 0.5)
+  end
+  return string.format("#%02x%02x%02x", out[1], out[2], out[3])
+end
+
+---The colour the row stripes are derived from. Normal is the editor's own
+---background and the right answer whenever it has one; a transparent
+---theme leaves it unset, and CursorLine is then the closest thing to a
+---surface colour the colorscheme offers.
 ---@return string|nil
-local function get_normal_bg()
+local function base_bg()
   local normal = vim.api.nvim_get_hl(0, { name = "Normal" })
   if normal.bg then
     return string.format("#%06x", normal.bg)
+  end
+  local cursorline = vim.api.nvim_get_hl(0, { name = "CursorLine" })
+  if cursorline.bg then
+    return string.format("#%06x", cursorline.bg)
   end
   return nil
 end
 
 function M.setup()
-  local normal_bg = get_normal_bg()
+  local bg = base_bg()
 
   local row_odd_bg, row_even_bg
-  if normal_bg then
-    row_odd_bg = adjust_color(normal_bg, -10, 15) -- darker + blue tint
-    row_even_bg = adjust_color(normal_bg, 5, 25) -- lighter + more blue tint
+  if bg then
+    -- Away from the background's own end of the scale, so there is always
+    -- headroom: a near-white theme darkens, a near-black one lightens, and
+    -- neither clips into a stripe indistinguishable from the background.
+    local target = luminance(bg) < 0.5 and "#ffffff" or "#000000"
+    row_odd_bg = blend(bg, target, STRIPE_ODD)
+    row_even_bg = blend(bg, target, STRIPE_EVEN)
   else
-    local cursorline = vim.api.nvim_get_hl(0, { name = "CursorLine" })
-    if cursorline.bg then
-      row_odd_bg = string.format("#%06x", cursorline.bg)
-      row_even_bg = adjust_color(row_odd_bg, 15)
-    else
-      row_odd_bg = "#1e2230"
-      row_even_bg = "#282c3f"
-    end
+    row_odd_bg = "#1e2230"
+    row_even_bg = "#282c3f"
   end
 
   vim.api.nvim_set_hl(0, "IfDbRowOdd", { bg = row_odd_bg })

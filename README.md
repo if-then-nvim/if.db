@@ -161,8 +161,10 @@ it if you set `history.on_select = "load"`. `R` always runs it.
 Columns are sized to their contents and values are coloured by type, so
 the shape of a row reads before you have parsed any of it: NULL, number,
 string, boolean, datetime, UUID and JSON each get their own group. Rows
-alternate against a zebra stripe derived from your `Normal` background
-rather than a fixed pair of colours.
+alternate against a zebra stripe derived from your `Normal`
+background: the stripe moves away from whichever end of the scale your 
+theme sits at, so a light colorscheme darkens where a dark one
+lightens, and the hue you started with is the hue you keep.
 
 `y` yanks the row under the cursor as JSON, `Y` yanks every row.
 
