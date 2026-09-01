@@ -1,11 +1,85 @@
 # if.db
 
-A database client for Neovim. It shells out to the database's own CLI, so
-there is no driver to install and nothing to compile.
+A database client for Neovim that shells out to the database's own CLI.
+There is no driver to install, nothing to compile, and no daemon to keep
+running — if you can already reach a database from your shell, if.db can
+reach it too.
 
 PostgreSQL, MySQL, MariaDB and SQLite.
 
 ![if.db](./screenshots/hero.webp)
+
+## Requirements
+
+- Neovim >= 0.10
+- The CLI for whichever database you connect to: `psql`, `mysql` or
+  `sqlite3`
+- [nui.nvim](https://github.com/MunifTanjim/nui.nvim)
+- A [Nerd Font](https://www.nerdfonts.com/), for the icons in every pane
+
+Optional: [plenary.nvim](https://github.com/nvim-lua/plenary.nvim) runs
+queries off the main loop, so a slow one does not block the editor;
+without it they run synchronously. [vim-dadbod](https://github.com/tpope/vim-dadbod)
+lets you set `executor = "dadbod"` and reuse its adapters instead of the
+CLI invocation if.db builds itself.
+
+## Install
+
+```lua
+{
+  "if-then-nvim/if.db",
+  cmd = "IfDb",
+  keys = { { "<Leader>db", "<cmd>IfDb<cr>", desc = "Database" } },
+  dependencies = { "MunifTanjim/nui.nvim" },
+  opts = {
+    connections = {
+      { name = "local", url = "postgres://localhost/mydb" },
+      { name = "prod", url = "$DATABASE_URL" },
+    },
+  },
+}
+```
+
+## Connections
+
+A connection is a name and a URL. The URL takes the usual shape, and
+`$VAR` or `${VAR}` is expanded when the connection is opened, so a
+password never has to sit in your config:
+
+```
+postgres://user:password@host:port/database
+mysql://user:password@host:port/database
+mariadb://user:password@host:port/database
+sqlite:///path/to/database.db
+```
+
+Building the list at runtime works too, which is the easy way to keep
+credentials in the environment and out of version control:
+
+```lua
+opts = function()
+  local list = {}
+  for _, name in ipairs { "local", "staging", "prod" } do
+    local url = os.getenv("DB_" .. name:upper())
+    if url and url ~= "" then
+      list[#list + 1] = { name = name, url = url }
+    end
+  end
+  return { connections = list }
+end,
+```
+
+## Commands
+
+| Command | |
+|---|---|
+| `:IfDb` | Open the workbench, or switch to its tab |
+| `:IfDb connect [name]` | Connect to a connection, or prompt for one |
+| `:IfDb pick` | Prompt for a connection |
+| `:IfDb list` | List the configured connections |
+| `:IfDb query <sql>` | Run one query and echo the result, no workbench |
+| `:IfDbClose` | Close the workbench |
+| `:IfDbRestore` | Rebuild the layout after a window was closed |
 
 ## Layout
 
@@ -29,120 +103,111 @@ layout = {
 ```
 
 The left column never goes under 36 columns, which is what the history
-shorthand needs to stay on one line, and never over half the screen.
+shorthand needs to stay on one line, and never over half the screen. The
+right column keeps 40, and no pane goes under 3 rows, so a small window
+degrades instead of collapsing.
 
-## Requirements
+`<Tab>` and `<S-Tab>` walk the four panes in a ring. `?` in any of them
+lists that pane's keymaps.
 
-- Neovim >= 0.10
-- The CLI for whichever database you connect to: `psql`, `mysql` or
-  `sqlite3`
-- [nui.nvim](https://github.com/MunifTanjim/nui.nvim)
+## Schema
 
-Optional: [plenary.nvim](https://github.com/nvim-lua/plenary.nvim) for
-async execution, [vim-dadbod](https://github.com/tpope/vim-dadbod) if you
-prefer `executor = "dadbod"` over the CLI.
+The sidebar lists connections, open query buffers, saved queries and the
+schema tree. Expand down to a column with `<CR>`; `t` toggles column
+types on and off.
 
-## Install
+`i` on a table opens a new query tab holding `SELECT * FROM table LIMIT
+10;`, and on a column one holding the column name — enough to start
+typing rather than reaching back for the schema you just looked at.
 
-```lua
-{
-  "if-then-nvim/if.db",
-  cmd = "IfDb",
-  dependencies = { "MunifTanjim/nui.nvim" },
-  opts = {
-    connections = {
-      { name = "local", url = "postgres://localhost/mydb" },
-      { name = "prod", url = "$DATABASE_URL" },
-    },
-  },
-}
-```
-
-Connection URLs take the usual shape, and `$VAR` or `${VAR}` is expanded:
-
-```
-postgres://user:password@host:port/database
-mysql://user:password@host:port/database
-mariadb://user:password@host:port/database
-sqlite:///path/to/database.db
-```
-
-Open it with `:IfDb`, close it with `:IfDbClose`.
+Saved queries live per connection and are yours to name: `n` creates one,
+`r` renames, `d` deletes, `c` and `p` copy and paste the SQL between
+them.
 
 ## History
 
-The history pane is written in a shorthand rather than echoing the SQL,
-which is already on screen in the editor beside it:
+Every query that runs is recorded with its timing. The pane writes each
+one in a shorthand rather than echoing the SQL, which is already on
+screen in the editor beside it:
 
-```
-10:35  SEL stories 󰈲 karma 󰕤 users 󰒼   53ms
-10:35  SEL user_detail 󰈲 id 󰆐 20        31ms
-10:34  DEL comments 󰈲 story_id         50ms
-10:33  SEL users 󰒽                     60ms
-10:33  SEL stories 󰒠                   99ms
-```
+![history pane](./screenshots/history.webp)
 
-| Marker | Clause |
+A verb, the table it touched, then a marker per clause. Each marker shows
+its value only when the value is what tells you which query this was:
+
+| Clause | Shown |
 |---|---|
-| `󰈲 column` | `WHERE`, with the column it filters on |
-| `󰕤 name` | `JOIN name` |
-| `󰒽` `󰒼` | `ORDER BY`, ascending or descending |
-| `󰒠` | `GROUP BY` |
-| `󰆐 n` | `LIMIT n` |
+| `WHERE` | the column it filters on |
+| `JOIN` | the table it reaches for |
+| `ORDER BY` | direction only, ascending or descending |
+| `GROUP BY` | nothing |
+| `LIMIT` | the row count |
 
-A clause shows its value when the value tells you which query this was:
-the column a WHERE filters on, the table a JOIN reaches for, the row
-count a LIMIT stops at. Sort and group columns are left off, because
-knowing a query was sorted rarely helps you find it and the names are
-long.
+Sort and group columns are left off. Knowing a query was sorted rarely
+helps you find it again, and the column names are long enough to push
+everything else off the line.
 
-Markers are never half-drawn. When the pane is too narrow, a table or
+Markers are never half-drawn. When the pane is too narrow a table or
 column name truncates with an ellipsis, and a marker that will not fit
-whole is dropped instead of leaving a stub.
+whole is dropped rather than left as a stub. The timing is laid out from
+the right edge inward, so a narrow pane eats the query text and keeps the
+number you were looking for.
 
-The timing is laid out from the right edge inward, so a narrow pane
-truncates the query text rather than dropping the number you wanted.
+`<CR>` runs the entry again, or loads it into the editor without running
+it if you set `history.on_select = "load"`. `R` always runs it.
+
+## Result
+
+Columns are sized to their contents and values are coloured by type, so
+the shape of a row reads before you have parsed any of it: NULL, number,
+string, boolean, datetime, UUID and JSON each get their own group. Rows
+alternate against a zebra stripe derived from your `Normal` background
+rather than a fixed pair of colours.
+
+`y` yanks the row under the cursor as JSON, `Y` yanks every row.
 
 ## Keymaps
 
-Anywhere: `q` closes, `?` shows the keymaps for the pane you are in.
+`q` closes the workbench from any pane, `?` shows that pane's keymaps.
 
-| Sidebar | |
+| Schema | |
 |---|---|
 | `<CR>` `o` | Expand or collapse, or open a query |
-| `n` | New query |
-| `r` | Rename query |
-| `d` | Delete query |
-| `y` `c` `p` | Copy name, copy query, paste query |
-| `S` `i` | Insert a SELECT or INSERT template |
+| `n` `r` `d` | New, rename, delete a saved query |
+| `y` `c` `p` | Copy name, copy SQL, paste SQL |
+| `i` | Open a SELECT for the table, or the column name |
 | `t` | Show or hide column types |
 | `R` | Refresh the schema |
-| `<Tab>` `<S-Tab>` | Editor, history |
+| `<Tab>` `<S-Tab>` | Query, history |
 
-| Editor | |
+| Query | |
 |---|---|
 | `<CR>` | Execute |
 | `<C-CR>` | Execute from insert mode |
+| `<Leader>r` | Execute |
 | `<C-s>` | Save |
 | `gt` `gT` | Next, previous query |
 | `<Leader>w` | Close query |
-| `<Tab>` `<S-Tab>` | Result, sidebar |
+| `<Tab>` `<S-Tab>` | Result, schema |
 
 | History | |
 |---|---|
 | `<CR>` | Load or execute, per `history.on_select` |
 | `R` | Execute again |
 | `y` `d` `C` | Copy, delete, clear all |
-| `<Tab>` `<S-Tab>` | Sidebar, result |
+| `<Tab>` `<S-Tab>` | Schema, result |
 
 | Result | |
 |---|---|
 | `y` `Y` | Yank the row, or every row, as JSON |
-| `<Tab>` `<S-Tab>` | Sidebar, editor |
+| `<Tab>` `<S-Tab>` | Schema, query |
+
+Every one of these is remappable under `keymaps`, grouped by pane. See
+`:help if-db-keymaps` for the full set.
 
 ## Completion
 
-The plugin registers an `ifdb` source that offers tables, columns and
+The plugin registers an `ifdb` source offering tables, columns and
 keywords from the schema of the connection you are querying.
 
 ```lua
@@ -181,8 +246,6 @@ require("if.db").setup {
   },
 
   result = {
-    max_width = 120,
-    max_height = 20,
     show_line_number = true,
   },
 
@@ -193,14 +256,10 @@ require("if.db").setup {
     filter_by_connection = true,
   },
 
-  highlights = {},   -- override any IfDb* group
+  keymaps = {},       -- see :help if-db-keymaps
+  highlights = {},    -- override any IfDb* group
 }
 ```
-
-Keymaps live under `keymaps`, grouped by pane: `keymaps.sidebar`,
-`keymaps.editor`, `keymaps.history`, `keymaps.result`, plus the global
-`open`, `execute` and `close`. See `:help if-db-config-keymaps` for the
-full set.
 
 Saved queries and history live under `stdpath("data")/if.db`.
 
@@ -219,16 +278,10 @@ highlights = {
 
 | Result | Default |
 |---|---|
-| `IfDbRowOdd` `IfDbRowEven` | computed from `CursorLine` |
+| `IfDbRowOdd` `IfDbRowEven` | computed from the `Normal` background |
 | `IfDbHeader` | computed from the `Function` foreground |
 | `IfDbSeparator` | `Comment` |
 | `IfDbCellActive` | `CursorLine` |
-
-| Windows | Default |
-|---|---|
-| `IfDbFloat` | `NormalFloat` |
-| `IfDbBorder` | `WinSeparator` |
-| `IfDbTitle` | `Title` |
 
 | Value types | Default |
 |---|---|
@@ -247,29 +300,31 @@ highlights = {
 | `IfDbPK` | `ErrorMsg`, bold |
 | `IfDbFK` | `Function`, bold |
 
-| Sidebar | Default |
-|---|---|
-| `IfDbIconDb` | `Number`, for an unrecognised type |
-| `IfDbIconPostgres` … `IfDbIconMongodb` | brand colours, bold |
-| `IfDbSidebarIcon*` | per node kind |
-| `IfDbSidebarText` `IfDbSidebarTextActive` | `Normal`, `String` |
-| `IfDbSidebarType` | `Comment` |
-
 | History | Default |
 |---|---|
-| `IfDbHistoryHeader` | `Title`, bold |
-| `IfDbHistoryRowOdd` `IfDbHistoryRowEven` | computed |
-| `IfDbHistoryTime` | `Comment` |
-| `IfDbHistoryDuration` | `Number` |
 | `IfDbHistoryVerb` | `@keyword.sql` |
 | `IfDbHistoryTarget` | `@type.sql` |
 | `IfDbHistoryColumn` | `@variable.member.sql` |
 | `IfDbHistoryCount` | `@number.sql` |
 | `IfDbHistoryHint*` | `@keyword.sql`, one group per clause |
+| `IfDbHistoryTime` | `Comment` |
+| `IfDbHistoryDuration` | `Number` |
+| `IfDbHistoryRowOdd` `IfDbHistoryRowEven` | computed |
 
 The shorthand borrows the colours tree-sitter gives SQL, so a verb, a
 table and a column read the same in the history pane as they do in the
 editor above it. Override any group to break that link.
+
+The window, sidebar and icon groups are in `:help if-db-highlights`.
+
+## Development
+
+```sh
+make test                                  # all specs
+make test-file FILE=tests/core/schema_spec.lua
+make lint                                  # stylua --check + selene
+make format                                # stylua
+```
 
 ## Credits
 
