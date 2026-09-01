@@ -341,7 +341,16 @@ function M.get_columns(url, table_name)
       table_name
     )
   elseif db_type == "sqlite" then
-    query = string.format("PRAGMA table_info('%s')", table_name)
+    query = string.format(
+      [[
+      SELECT name AS column_name,
+             type AS data_type,
+             CASE WHEN "notnull" = 0 THEN 'YES' ELSE 'NO' END AS is_nullable,
+             CASE WHEN pk > 0 THEN 'YES' ELSE 'NO' END AS is_primary
+      FROM pragma_table_info('%s')
+    ]],
+      table_name
+    )
   else
     return {}
   end
@@ -594,7 +603,16 @@ function M.get_columns_async(url, table_name, callback)
       table_name
     )
   elseif db_type == "sqlite" then
-    query = string.format("PRAGMA table_info('%s')", table_name)
+    query = string.format(
+      [[
+      SELECT name AS column_name,
+             type AS data_type,
+             CASE WHEN "notnull" = 0 THEN 'YES' ELSE 'NO' END AS is_nullable,
+             CASE WHEN pk > 0 THEN 'YES' ELSE 'NO' END AS is_primary
+      FROM pragma_table_info('%s')
+    ]],
+      table_name
+    )
   else
     vim.schedule(function()
       callback({}, nil)
