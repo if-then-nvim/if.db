@@ -54,7 +54,7 @@ local function base_bg()
   return nil
 end
 
-function M.setup()
+local function apply()
   local bg = base_bg()
 
   local row_odd_bg, row_even_bg
@@ -158,6 +158,21 @@ function M.setup()
       vim.api.nvim_set_hl(0, name, opts)
     end
   end
+end
+
+function M.setup()
+  apply()
+
+  -- :colorscheme runs `highlight clear`, which takes every IfDb group with
+  -- it, linked ones included. Without this the panes lose their colours
+  -- the first time the theme changes and do not get them back until the
+  -- plugin is set up again.
+  local group = vim.api.nvim_create_augroup("IfDbHighlights", { clear = true })
+  vim.api.nvim_create_autocmd("ColorScheme", {
+    group = group,
+    desc = "Reapply if.db highlights",
+    callback = apply,
+  })
 end
 
 return M
