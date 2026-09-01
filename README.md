@@ -214,7 +214,3 @@ make format
 
 if.db is the lightweight corner of that space: no driver, no daemon, just
 the CLI you already have.
-
-## License
-
-MIT. See [LICENSE](LICENSE).
