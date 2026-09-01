@@ -12,8 +12,6 @@ M.defaults = {
     show_system_schemas = true,
   },
   result = {
-    max_width = 120,
-    max_height = 20,
     show_line_number = true,
   },
   history = {
@@ -23,7 +21,6 @@ M.defaults = {
     filter_by_connection = true,
   },
   keymaps = {
-    open = "<Leader>db",
     execute = "<CR>",
     close = "q",
 

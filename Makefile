@@ -1,4 +1,4 @@
-.PHONY: test test-file lint
+.PHONY: test test-file test-verbose lint format
 
 # Run all tests
 test:
@@ -12,3 +12,12 @@ test-file:
 # Run tests with verbose output
 test-verbose:
 	nvim --headless -u tests/minimal_init.lua -c "lua require('plenary.test_harness').test_directory('tests/', {minimal_init = 'tests/minimal_init.lua', sequential = true})"
+
+# Check formatting and lint
+lint:
+	stylua --check lua/ plugin/ tests/
+	selene lua/ plugin/ tests/
+
+# Reformat
+format:
+	stylua lua/ plugin/ tests/

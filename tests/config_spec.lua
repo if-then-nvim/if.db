@@ -13,7 +13,7 @@ describe("config", function()
 
     it("has result configuration", function()
       assert.is_not_nil(config.defaults.result)
-      assert.are.equal(120, config.defaults.result.max_width)
+      assert.is_true(config.defaults.result.show_line_number)
     end)
 
     it("has sidebar configuration", function()
@@ -33,7 +33,6 @@ describe("config", function()
 
     it("has keymaps configuration", function()
       assert.is_not_nil(config.defaults.keymaps)
-      assert.is_not_nil(config.defaults.keymaps.open)
       assert.is_not_nil(config.defaults.keymaps.execute)
       assert.is_not_nil(config.defaults.keymaps.close)
 
@@ -68,19 +67,19 @@ describe("config", function()
       local opts = config.get()
       assert.are.equal(1, #opts.connections)
       assert.are.equal("mydb", opts.connections[1].name)
-      assert.is_not_nil(opts.result.max_width)
+      assert.is_true(opts.result.show_line_number)
     end)
 
     it("allows overriding nested options", function()
       config.setup {
         result = {
-          max_width = 80,
+          show_line_number = false,
         },
       }
 
       local opts = config.get()
-      assert.are.equal(80, opts.result.max_width)
-      assert.is_not_nil(opts.result.max_height)
+      assert.is_false(opts.result.show_line_number)
+      assert.is_true(opts.sidebar.show_system_schemas)
     end)
 
     it("works with empty options", function()
@@ -107,12 +106,12 @@ describe("config", function()
     it("returns configured options after setup", function()
       config.setup {
         keymaps = {
-          open = "<Leader>sql",
+          execute = "<Leader>sql",
         },
       }
 
       local opts = config.get()
-      assert.are.equal("<Leader>sql", opts.keymaps.open)
+      assert.are.equal("<Leader>sql", opts.keymaps.execute)
     end)
 
     it("returns same instance on multiple calls", function()

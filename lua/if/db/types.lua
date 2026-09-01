@@ -20,8 +20,6 @@
 ---@field show_system_schemas boolean Show system schemas (pg_catalog, information_schema)
 
 ---@class IfDb.ResultConfig
----@field max_width number Maximum grid width
----@field max_height number Maximum grid height
 ---@field show_line_number boolean Show line numbers in result grid
 
 ---@alias IfDb.HistoryField "icon"|"time"|"dbname"|"query"|"duration"
@@ -34,7 +32,6 @@
 ---@field format? IfDb.HistoryField[] Fields to show and their order (nil = auto based on filter_by_connection)
 
 ---@class IfDb.Keymaps
----@field open string Keymap to open if.db
 ---@field execute string Keymap to execute query (Global)
 ---@field close string Keymap to close if.db (Global)
 ---@field sidebar IfDb.SidebarKeymaps
