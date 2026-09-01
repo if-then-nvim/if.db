@@ -3,7 +3,7 @@
 A database client for Neovim. It shells out to the database's own CLI, so
 there is no driver to install and nothing to compile.
 
-![if.db](./screenshots/main.png)
+![if.db](./screenshots/hero.webp)
 
 PostgreSQL, MySQL, MariaDB and SQLite.
 
@@ -270,17 +270,6 @@ highlights = {
 The shorthand borrows the colours tree-sitter gives SQL, so a verb, a
 table and a column read the same in the history pane as they do in the
 editor above it. Override any group to break that link.
-
-## Screenshots
-
-### Schema browser
-![Schema browser](./screenshots/sidebar.png)
-
-### Results
-![Results](./screenshots/result.png)
-
-### History
-![History](./screenshots/history.png)
 
 ## Credits
 
