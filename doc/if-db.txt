@@ -39,7 +39,7 @@ Layout: >
 ==============================================================================
 REQUIREMENTS                                                *if-db-requirements*
 
-- Neovim >= 0.9.0
+- Neovim >= 0.10 (vim.uv)
 - nui.nvim (https://github.com/MunifTanjim/nui.nvim)
 - vim-dadbod (https://github.com/tpope/vim-dadbod) (optional, for `executor = "dadbod"`)
 - plenary.nvim (https://github.com/nvim-lua/plenary.nvim) (optional, for async execution)
@@ -129,8 +129,6 @@ result ~
     Result configuration.
     Type: `IfDb.ResultConfig`
 
-    - `max_width`: Maximum result width (default: 120)
-    - `max_height`: Maximum result height (default: 20)
     - `show_line_number`: Show line numbers (default: true)
 
     Results always render as a table with zebra striping and type-aware
@@ -157,7 +155,6 @@ keymaps ~
     Type: `IfDb.Keymaps`
 
     Global:
-    - `open`: Keymap to open if.db (default: "<Leader>db")
     - `execute`: Keymap to execute query (default: "<CR>")
     - `close`: Keymap to close if.db (default: "q")
 
@@ -223,8 +220,6 @@ Example configuration: >lua
         show_system_schemas = true,
       },
       result = {
-        max_width = 120,
-        max_height = 20,
         show_line_number = true,
       },
       history = {
@@ -234,7 +229,6 @@ Example configuration: >lua
         filter_by_connection = true,
       },
       keymaps = {
-        open = "<Leader>db",
         execute = "<CR>",
       },
       highlights = {
@@ -247,11 +241,25 @@ Example configuration: >lua
 COMMANDS                                                        *if-db-commands*
 
                                                                         *:IfDb*
-:IfDb                   Open the if.db sidebar. If already open, switches
+:IfDb                   Open the workbench. If it is already open, switch
                         to its tab.
 
+:IfDb connect {name}    Connect to the named connection. Without a name,
+                        prompt for one.
+
+:IfDb pick              Prompt for a connection.
+
+:IfDb list              List the configured connections.
+
+:IfDb query {sql}       Run {sql} on the current connection and echo the
+                        result, without opening the workbench.
+
                                                                    *:IfDbClose*
-:IfDbClose              Close if.db and clean up all windows.
+:IfDbClose              Close the workbench and clean up its windows.
+
+                                                                 *:IfDbRestore*
+:IfDbRestore            Rebuild the four-pane layout. Use it after a
+                        window was closed or resized by something else.
 
 ==============================================================================
 KEYMAPS                                                          *if-db-keymaps*
@@ -261,8 +269,8 @@ SIDEBAR KEYMAPS                                          *if-db-keymaps-sidebar*
     `<CR>` or `o`       Toggle node expansion or open query
     `t`                 Show or hide column types
     `<Tab>`             Move focus to editor window
-    `S`                 Generate SELECT * query for table
-    `i`                 Generate INSERT template for table
+    `i`                 Open a SELECT * query for the table under the
+                        cursor, or insert the column name
     `d`                 Delete saved query (with confirmation)
     `q`                 Close if.db
 
