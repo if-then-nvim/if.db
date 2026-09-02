@@ -34,6 +34,7 @@ backs `executor = "dadbod"`.
 ```lua
 {
   "if-then-nvim/if.db",
+  main = "if.db",
   cmd = "IfDb",
   keys = { { "<Leader>db", "<cmd>IfDb<cr>", desc = "Database" } },
   dependencies = { "MunifTanjim/nui.nvim" },
