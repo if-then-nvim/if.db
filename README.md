@@ -1,7 +1,7 @@
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="./assets/logo-dark.svg">
-    <img src="./assets/logo-light.svg" width="240" alt="if.db">
+    <img src="./assets/logo-light.svg" height="120" alt="if.db">
   </picture>
 </p>
 
