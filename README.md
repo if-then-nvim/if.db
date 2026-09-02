@@ -1,12 +1,22 @@
-# if.db
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="./assets/logo-dark.svg">
+    <img src="./assets/logo-light.svg" width="240" alt="if.db">
+  </picture>
+</p>
 
-A database client for Neovim that shells out to the database's own CLI.
-No driver to install, nothing to compile, no daemon: if you can reach a
-database from your shell, if.db can reach it too.
+<p align="center">
+  A database client for Neovim that shells out to the database's own CLI.<br>
+  No driver to install, nothing to compile, no daemon.
+</p>
 
-PostgreSQL, MySQL, MariaDB and SQLite.
+<p align="center">
+  PostgreSQL &middot; MySQL &middot; MariaDB &middot; SQLite
+</p>
 
-![if.db](./screenshots/hero.webp)
+<p align="center">
+  <img src="./screenshots/hero.webp" width="100%" alt="if.db">
+</p>
 
 ## Requirements
 
